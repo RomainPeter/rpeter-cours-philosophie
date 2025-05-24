@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cours de Philosophie Interactif</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .highlighted-term {
+            background-color: rgba(209, 213, 219, 0.2); 
+            padding: 0.1em 0.3em;
+            border-radius: 0.25em;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .highlighted-term:hover {
+            background-color: rgba(156, 163, 175, 0.3); 
+        }
+        ::-webkit-scrollbar {
+            width: 5px; 
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        #definition-popup, #chapter-content, #chapter-nav {
+            overflow-y: auto; 
+        }
+        #chapter-nav-container {
+            height: 384px; /* h-96 */
+        }
+        #definition-popup {
+            height: 224px; /* h-56 */
+        }
+         #content-display-container {
+            height: 100%; 
+        }
+        /* Styles pour le tableau */
+        #course-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1em;
+            font-size: 0.9em; 
+        }
+        #course-table th, #course-table td {
+            border: 1px solid rgba(107, 114, 128, 0.5); 
+            padding: 0.5em;
+            text-align: left;
+            vertical-align: top;
+        }
+        #course-table th {
+            background-color: rgba(75, 85, 99, 0.5); 
+            font-weight: 600; 
+        }
+        #course-table td ul {
+            padding-left: 1em;
+            margin-top: 0.25em;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-yellow-300 via-orange-400 via-pink-500 to-purple-600 min-h-screen flex items-center justify-center p-3 selection:bg-purple-500 selection:text-white">
+
+    <div class="relative flex w-full max-w-6xl h-[90vh] items-center space-x-3">
+        <div id="chapter-nav-container" class="bg-gray-800 text-white p-3 rounded-lg shadow-xl w-1/5 flex-none flex flex-col">
+            <h2 class="text-xs font-semibold text-white mb-2 pb-1.5 border-b border-gray-700 text-center">Chapitres</h2>
+            <nav id="chapter-nav" class="flex-grow">
+                <ul class="space-y-1">
+                </ul>
+            </nav>
+        </div>
+
+        <div id="content-display-container" class="bg-gray-800 text-white p-4 rounded-lg shadow-xl flex-grow flex flex-col">
+            <h2 id="chapter-title" class="text-xs font-semibold text-white mb-2 pb-1.5 border-b border-gray-700 text-center"></h2>
+            <div id="chapter-content" class="text-xs font-light leading-snug text-justify flex-grow mb-1.5 pr-1 flex flex-col justify-center">
+            </div>
+            <div id="content-navigation" class="mt-auto pt-2 border-t border-gray-700 flex justify-between items-center">
+                <button id="prev-page-button" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-1 px-2.5 rounded-md text-xs transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-opacity-75">Précédent</button>
+                <span id="page-counter" class="text-xs text-gray-400">Page 0/0</span>
+                <button id="next-page-button" class="bg-pink-500 hover:bg-pink-600 text-white font-medium py-1 px-2.5 rounded-md text-xs transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-pink-300 focus:ring-opacity-75">Suivant</button>
+            </div>
+        </div>
+        
+        <div class="w-48 flex-none"> </div>
+
+        <div id="definition-popup" class="absolute top-1/2 right-3 transform -translate-y-1/2 bg-gray-700 text-white p-3 rounded-lg shadow-xl w-48 flex-col hidden">
+            <h3 id="definition-title" class="text-xs font-semibold text-white mb-1 pb-1 border-b border-gray-600">Définition</h3>
+            <div id="definition-content" class="text-xs font-light leading-snug flex-grow">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const courseData = {
+            chapters: [
+                {
+                    id: "intro",
+                    title: "Introduction Générale",
+                    sections: [
+                        {
+                            title: "L'objectif pédagogique",
+                            content: `<p>L'objectif pédagogique de cette introduction est de présenter la <span class="highlighted-term" data-term="philosophie">philosophie</span> non comme un ensemble de savoirs achevés et immuables, mais plutôt comme une démarche intellectuelle singulière, une manière spécifique d'interroger le monde, nos connaissances et nos propres pensées. Il s'agit de former l'esprit à une réflexivité critique et à une capacité d'analyse conceptuelle.</p>`
+                        },
+                        {
+                            title: "Définitions Possibles de la Philosophie (Partie 1)",
+                            content: `<p>La <span class="highlighted-term" data-term="philosophie">philosophie</span>, par sa nature même, échappe à une définition unique et définitive. Plusieurs approches permettent cependant d'en cerner les contours et les ambitions.</p>
+                                       <p class="mt-1.5"><strong>Discipline qui s'occupe des <span class="highlighted-term" data-term="questions-ultimes">questions ultimes</span> :</strong> La philosophie se confronte aux interrogations fondamentales qui touchent à l'existence humaine et à la nature de la réalité. Ces \"questions ultimes\" incluent, par exemple, le sens de la vie, la nature de la conscience, l'existence de Dieu, les fondements de la morale ou la structure du réel. Une distinction cruciale est celle entre les moyens et les fins : alors que de nombreuses disciplines se concentrent sur les moyens d'atteindre des objectifs donnés, la philosophie interroge la valeur et la légitimité des fins elles-mêmes. Par exemple, la technique fournit des moyens pour transformer le monde, mais la philosophie questionne la désirabilité des fins que ces techniques servent. Cette approche révèle deux facettes de la philosophie : d'une part, elle peut être conçue comme une science fondamentale, une métaphysique cherchant à élucider les principes premiers de l'être et de la connaissance. D'autre part, elle se présente comme une <span class="highlighted-term" data-term="sophia">sagesse</span> (sophia), un art de bien vivre, une quête d'une existence épanouie, vertueuse et lucide. Ces deux aspects, spéculatif et pratique, sont souvent intimement liés dans la tradition philosophique.</p>`
+                        },
+                        {
+                            title: "Définitions Possibles (Partie 2)",
+                            content: `<p><strong>La discipline qui comprend, qui pose et qui résout des problèmes :</strong> La philosophie s'attache à identifier, formuler et, si possible, résoudre des problèmes qui sont souvent de nature conceptuelle. Ces problèmes naissent fréquemment d'<span class="highlighted-term" data-term="aporie">apories</span> (difficultés logiques insolubles), de paradoxes ou de conflits entre différentes valeurs ou croyances fondamentales. Il est essentiel de noter qu'\"il n'y a pas toujours de réponse définitive\" en philosophie. L'importance réside souvent autant dans la rigueur du questionnement et la clarté de la problématisation que dans la solution proposée. La philosophie est ainsi un apprentissage de la confrontation à l'incertitude et à la complexité. Dans cette optique, \"parfois, une clarification est un progrès\". Le travail d'analyse conceptuelle – définir les termes, distinguer les notions proches, mettre au jour les ambiguïtés – est central. Une telle clarification peut parfois dissoudre ce qui apparaissait initialement comme un problème insoluble, révélant qu'il reposait sur une confusion de langage ou une mauvaise formulation. Il arrive ainsi qu'\"un problème clarifié disparaît complètement\", comme dans le cas du paradoxe sorite (le \"tas de sable\") qui interroge la nature vague de certains prédicats.</p>`
+                        },
+                        {
+                            title: "Définitions Possibles (Partie 3)",
+                            content: `<p><strong>La discipline qui réalise des crash-tests d'idées :</strong> La philosophie soumet les concepts, les idées, les opinions et les croyances à un examen critique rigoureux, \"en les mettant en tension\". Les méthodes employées pour ce \"crash-test\" intellectuel incluent le dialogue socratique, qui pousse l'interlocuteur à examiner la cohérence de ses propres affirmations, l'expérience de pensée, qui explore les implications logiques d'une hypothèse dans des scénarios souvent extrêmes, ou encore la confrontation dialectique de thèses opposées. L'objectif est d'évaluer la robustesse, la cohérence interne et les conséquences pratiques ou théoriques des idées examinées.</p>
+                                       <p class="mt-1.5"><strong>La discipline qui développe l'<span class="highlighted-term" data-term="esprit-critique">esprit critique</span> :</strong> L'une des fonctions cardinales de la philosophie est de cultiver l'esprit critique. Cela implique d'\"apprendre à penser contre les autres, mais surtout contre soi-même\". Il s'agit de développer la capacité à remettre en question les préjugés, les évidences admises sans examen, les dogmes et les idées reçues. L'autocritique et l'humilité intellectuelle sont des vertus philosophiques essentielles. \"Prendre du recul pour juger, évaluer\" est le sens originel du mot \"critique\" (du grec krinein, signifiant juger, séparer, discerner). La philosophie vise à développer cette distance réflexive par rapport à ses propres pensées, à ses émotions, et au monde environnant, permettant ainsi un jugement plus éclairé et autonome.</p>`
+                        },
+                        {
+                             title: "Définitions Possibles (Partie 4) & Socrate",
+                             content: `<p><strong>La discipline de l'<span class="highlighted-term" data-term="ingenierie-conceptuelle">ingénierie conceptuelle</span> :</strong> La philosophie peut également être vue comme une forme d'\"ingénierie conceptuelle\". Les philosophes \"inventent ou améliorent des concepts\" pour affiner notre compréhension du réel. Des concepts comme l'\"inconscient\" (Freud), la \"mauvaise foi\" (Sartre), le \"paradigme\" (Kuhn) ou la \"déconstruction\" (Derrida) sont autant d'outils forgés pour penser des aspects spécifiques de l'expérience humaine ou de la connaissance. Un concept bien formé peut \"améliorer\" notre compréhension en nous permettant de saisir des nuances, d'établir des distinctions ou de structurer notre pensée de manière plus adéquate. Cette démarche s'apparente à un travail \"avec une logique de prototype à améliorer\", où les concepts sont constamment testés, affinés, voire remplacés. \"Le but est d'obtenir une carte mentale de la réalité qui soit meilleure, afin de pouvoir mieux comprendre cette réalité, et mieux circuler dans cette réalité\". La philosophie devient ainsi un outil d'orientation existentielle et intellectuelle, permettant de naviguer plus lucidement dans la complexité du monde.</p>
+                                        <p class="mt-1.5"><strong>Socrate et la Naissance de la Philosophie :</strong> La figure de Socrate, telle que dépeinte notamment dans les dialogues de Platon, incarne de manière exemplaire cette démarche philosophique naissante. Socrate se distingue par sa critique radicale des opinions admises (<span class="highlighted-term" data-term="doxa">doxa</span>) et des prétentions au savoir des prétendus spécialistes de son temps. Sa méthode, l'ironie socratique, consiste à feindre l'ignorance pour amener ses interlocuteurs à prendre conscience des contradictions et des insuffisances de leurs propres croyances. Par la <span class="highlighted-term" data-term="maieutique">maïeutique</span>, ou \"l'art d'accoucher les esprits\", il aide autrui à formuler ses propres pensées et à examiner leur validité. Sa célèbre formule, \"Je sais que je ne sais rien\", loin d'être un aveu d'ignorance passive, constitue le point de départ de toute recherche philosophique authentique : la reconnaissance de son ignorance comme condition de possibilité de la quête de la vérité.</p>`
+                        }
+                    ]
+                },
+                {
+                    id: "homme-animal",
+                    title: "I. L'Homme est-il un animal comme les autres ?",
+                    sections: [
+                        { 
+                            title: "Problématique Centrale du Chapitre",
+                            content: `<p>Ce chapitre aborde la question de la spécificité de l'homme, de sa place dans la Nature, de l'artificialité du monde qu'il se crée, et des moyens qu'il possède pour transformer la réalité. Les notions du programme abordées sont la conscience, le langage, la technique, le travail et la nature.</p>
+                                      <p class="mt-1.5">Un problème philosophique se caractérise souvent par un conflit entre deux idées qui, prises isolément, semblent justes, mais qui s'avèrent incompatibles lorsqu'on les confronte. Appliqué à la question de l'homme, ce conflit se manifeste ainsi :</p>
+                                      <ul class="list-disc list-inside mt-1.5 space-y-1">
+                                        <li>D'une part, l'homme est indéniablement un membre du règne animal, soumis aux lois de la biologie et issu d'un long processus évolutif.</li>
+                                        <li>D'autre part, l'homme présente des caractéristiques – telles qu'une <span class="highlighted-term" data-term="conscience-reflexive">conscience réflexive</span> complexe, un <span class="highlighted-term" data-term="langage-articule">langage articulé</span> capable d'abstraction, la création d'une culture et d'un monde technique transformant radicalement son environnement, ou encore l'élaboration de systèmes moraux et juridiques – qui semblent le distinguer profondément, voire le placer à part, des autres animaux.</li>
+                                      </ul>
+                                      <p class="mt-1.5">La question directrice de ce chapitre est donc de savoir comment articuler cette double appartenance. S'agit-il d'une simple différence de degré, l'homme possédant des capacités plus développées que les autres animaux, ou d'une différence de nature, marquant une rupture qualitative et une singularité irréductible?</p>`
+                        },
+                        {
+                            title: "Ce qui rapproche l'homme de l'animal",
+                            content: `<p>Plusieurs éléments attestent de l'ancrage de l'homme dans l'animalité :</p>
+                                      <ul class="list-disc list-inside mt-1.5 space-y-1">
+                                        <li><strong>Caractéristiques morphologiques, génétiques et biologiques partagées :</strong> L'homme partage une part significative de son ADN avec d'autres animaux, notamment les grands singes. Sa structure corporelle, ses systèmes organiques (respiration, digestion, reproduction) et ses besoins physiologiques primaires (se nourrir, boire, dormir, se protéger) sont largement similaires à ceux de nombreuses espèces animales.</li>
+                                        <li><strong>La capacité à avoir des conduites de survie :</strong> Comme les autres animaux, l'homme est doté d'instincts (de fuite face au danger, de combat, de reproduction) et de capacités d'apprentissage orientées vers la survie. En situation de danger extrême, on observe une "mise en veille" du néo-cortex, le siège des fonctions cognitives supérieures, au profit de réactions plus primaires et instinctives, gérées par des structures cérébrales plus anciennes (le "cerveau reptilien"). Ce mécanisme, bien qu'adaptatif, interroge la permanence de la rationalité humaine en situation de stress intense.</li>
+                                      </ul>`
+                        },
+                        {
+                            title: "Ce qui sépare (ou semble séparer) l'homme de l'animal",
+                            content: `<p>En dépit de ces rapprochements, plusieurs traits sont traditionnellement avancés pour souligner une spécificité humaine :</p>
+                                      <ul class="list-disc list-inside mt-1.5 space-y-1">
+                                        <li><strong>Le langage :</strong> La capacité humaine à utiliser un <span class="highlighted-term" data-term="langage-articule">langage articulé</span>, doté d'un alphabet et d'une grammaire complexe, permettant la création d'une infinité de significations et la communication de pensées abstraites, est souvent considérée comme une différence majeure.</li>
+                                        <li><strong>L'<span class="highlighted-term" data-term="evolution-artificielle">évolution artificielle</span> :</strong> L'homme ne se contente pas de subir l'évolution naturelle ; il a développé la capacité de prendre en main sa propre évolution (éducation, modifications corporelles, etc.) et celle d'autres espèces.</li>
+                                        <li><strong>La réflexion et la morale :</strong> La capacité à la réflexion sur ses propres actions et la <span class="highlighted-term" data-term="conscience-morale">conscience morale</span> qui en découle semblent être des caractéristiques humaines distinctives.</li>
+                                      </ul>`
+                        },
+                        {
+                            title: "1.1. La recherche d'une différence spécifique",
+                            content: `<p>L'entreprise philosophique et scientifique a longtemps cherché à identifier un critère unique et discriminant – la \"différence spécifique\" – qui permettrait de singulariser l'homme au sein du règne animal. Cette démarche s'appuie sur la distinction logique entre le genre et l'espèce, où l'espèce est définie par le genre commun et une ou plusieurs différences qui lui sont propres. La formation d'une bonne définition d'espèce exige de lister des différences spécifiques suffisantes pour éviter toute confusion.</p>`
+                        },
+                        {
+                            title: "1.1.1. La Conscience (Partie 1)",
+                            content: `<p>La conscience est l'un des candidats les plus fréquemment avancés pour marquer la spécificité humaine.</p>
+                                      <p class="mt-1.5"><strong>Premières tentatives de définition :</strong> La conscience peut être entendue de plusieurs manières. Il y a d'abord la conscience immédiate ou spontanée, comme simple \"présence de choses à l'attention\", un état d'éveil. Mais la conscience qui semble plus spécifiquement humaine est la <span class="highlighted-term" data-term="conscience-reflexive">conscience réfléchie</span>, la capacité de \"s'observer soi-même\".</p>
+                                      <p class="mt-1.5"><strong>Distinction conscience intellectuelle et conscience corporelle :</strong> Il convient de distinguer la conscience intellectuelle (pensée, raisonnement) de la conscience corporelle (proprioception, sensations). L'articulation de ces deux formes est explorée par la <span class="highlighted-term" data-term="phenomenologie">phénoménologie</span> (Merleau-Ponty et le \"corps propre\").</p>`
+                        },
+                        {
+                            title: "1.1.1. La Conscience (Partie 2)",
+                            content: `<p><strong>Le <span class="highlighted-term" data-term="stade-du-miroir">stade du miroir</span> :</strong> Théorisé par Jacques Lacan, c'est un moment crucial (6-18 mois) où l'enfant reconnaît son image, unifiant l'expérience de son corps et jetant les bases de son identité et du \"Je\". Ce test est aussi utilisé en éthologie pour évaluer une forme de conscience de soi chez certains animaux (grands singes, dauphins, éléphants, pies).</p>
+                                      <p class="mt-1.5"><strong>Quel type de conscience mentale, ou intellectuelle, caractérise les êtres humains?</strong> Trois difficultés majeures :</p>
+                                      <ol class="list-decimal list-inside mt-1.5 space-y-1">
+                                        <li>Savoir ce qu'est exactement la conscience et son articulation au corps (<span class="highlighted-term" data-term="probleme-corps-esprit">problème corps-esprit</span>). Le matérialisme la réduit à des processus cérébraux, le dualisme postule une distinction matière/pensée (le \"problème difficile de la conscience\" de Chalmers, lié aux <span class="highlighted-term" data-term="qualia">qualia</span>).</li>
+                                        <li>Savoir si la conscience est liée ou non à l'intelligence des comportements humains.</li>
+                                        <li>Savoir si on peut prêter certaines caractéristiques conscientes à d'autres êtres humains ou à des animaux (problème de l'accès à la conscience d'autrui, risque de <span class="highlighted-term" data-term="solipsisme">solipsisme</span>).</li>
+                                      </ol>`
+                        },
+                        {
+                            title: "1.1.1. La Conscience (Partie 3)",
+                            content: `<p><strong>Nietzsche et la conscience :</strong> Friedrich Nietzsche la considère comme une \"invention tardive de la Nature\", potentiellement un \"handicap\", contrastant avec l'oubli heureux de l'animal \"attaché au piquet de l'instant\".</p>
+                                      <p class="mt-1.5"><strong>Incommensurabilité des consciences :</strong> Thomas Nagel (\"Quel effet cela fait-il d'être une chauve-souris?\") souligne l'irréductibilité de l'expérience subjective. Même connaissant tout de la neurophysiologie d'une chauve-souris, nous ne saurions pas ce que c'est que de percevoir le monde comme elle. Chaque espèce pourrait vivre dans un \"monde propre\" (<span class="highlighted-term" data-term="umwelt">Umwelt</span>, Jakob von Uexküll), comme la tique avec ses signaux limités. Cela montre le risque d'<span class="highlighted-term" data-term="anthropomorphisme">anthropomorphisme</span>.</p>`
+                        },
+                        {
+                            title: "1.1.2. La Conscience du Temps (Partie 1)",
+                            content: `<p>Le rapport de l'homme au temps semble radicalement différent de celui des animaux.</p>
+                                      <p class="mt-1.5"><strong>Différences fondamentales :</strong> Nietzsche décrit l'animal comme \"attaché au piquet de l'instant\", vivant un présent perpétuel avec un oubli heureux. L'homme est un \"animal non encore fixé\", sa conscience structurée par la temporalité. Cette conscience du temps, source de planification, apporte aussi regrets, remords, angoisse de la finitude. D'où une ambivalence : \"On peut avoir à la fois du mépris et de la jalousie pour l'insouciance de l'animal\".</p>`
+                        },
+                        {
+                            title: "1.1.2. La Conscience du Temps (Partie 2)",
+                            content: `<p><strong>Conscience du passé et du futur chez les animaux :</strong> La conscience du passé est généralement limitée, bien que certaines espèces aient des capacités mémorielles (éléphants). Distinction entre mémoire sociale et <span class="highlighted-term" data-term="memoire-episodique">mémoire épisodique</span> (souvenir d'événements vécus), dont la présence chez l'animal est débattue. La projection dans le futur semble encore plus restreinte, la planification étant rare (primates, corvidés).</p>
+                                      <p class="mt-1.5"><strong>L'homme et le présent :</strong> Si l'animal semble \"incapable de vivre autre part que dans le présent\", l'homme, paradoxalement, \"semble incapable de vivre pleinement dans le présent\". Sa conscience est tirée entre passé (mémoire, identité narrative) et futur (projets, craintes). Saint Augustin, puis Husserl, ont analysé la structure ternaire du présent vécu : impression originaire, <span class="highlighted-term" data-term="retention">rétention</span> du passé immédiat, et <span class="highlighted-term" data-term="protention">protention</span> vers le futur immédiat. Ainsi, \"même au niveau du présent, l'homme semble déborder constamment sur le passé et le futur\".</p>
+                                      <p class="mt-1.5"><strong>Le cerveau comme machine à anticiper :</strong> Le cerveau humain peut être vu comme une \"machine à simuler et à anticiper\", avantage adaptatif lié à l'imagination et la créativité, mais aussi source d'anxiété.</p>`
+                        },
+                        {
+                            title: "1.1.3. Les concepts et les idées générales",
+                            content: `<p>L'être humain évolue dans un univers saturé d'abstractions.</p>
+                                       <p class="mt-1.5"><strong>Omniprésence de l'abstraction :</strong> Le monde humain est structuré par un \"réseau très dense d'idées abstraites\" (justice, amour, nation, etc.). L'homme pense l'universel et le général.</p>
+                                       <p class="mt-1.5"><strong>Distinction abstrait/concret :</strong> Le concret est perçu par les sens, singulier. L'abstrait est conçu par l'esprit, général. Le langage est le véhicule de ces abstractions. Les animaux vivent-ils principalement dans un monde concret ? (Des recherches suggèrent des capacités de catégorisation chez certaines espèces).</p>`
+                        },
+                        {
+                            title: "1.1.4. La théorie de l'esprit",
+                            content: `<p>La <span class="highlighted-term" data-term="theorie-de-l-esprit">théorie de l'esprit</span> désigne la capacité cognitive à attribuer des états mentaux (croyances, désirs, intentions, émotions) à soi-même (métacognition) et à autrui. Elle implique de comprendre que les autres ont des états mentaux différents des siens, expliquant leurs comportements. Cruciale pour les interactions sociales humaines (coopération, empathie, tromperie). Des formes rudimentaires sont suspectées chez les grands singes (test de Sally et Anne adapté), mais le degré de complexité chez l'animal reste débattu.</p>`
+                        },
+                        {
+                            title: "1.1.5. Le Langage (Partie 1)",
+                            content: `<p>Le langage humain est souvent présenté comme le critère par excellence de la distinction homme-animal.</p>
+                                      <p class="mt-1.5"><strong>Ingrédients et puissance du langage humain :</strong> Un langage articulé se compose d'une phonétique, d'un alphabet/signes, d'un vocabulaire et d'une grammaire. Si certains animaux apprennent des mots/signes, le langage humain se distingue par sa puissance combinatoire, ou \"<span class="highlighted-term" data-term="double-articulation">double articulation</span>\". Première articulation : unités non significatives (phonèmes/lettres) en unités significatives (mots/morphèmes). Seconde articulation : mots en phrases (infinité de phrases nouvelles). Permet d'exprimer la complexité des pensées/ressentis.</p>`
+                        },
+                        {
+                            title: "1.1.5. Le Langage (Partie 2)",
+                            content: `<p><strong>Descartes et le langage animal :</strong> Pour Descartes, les animaux ne parlent pas véritablement car ils n'expriment pas de pensées au sens propre. Leurs vocalisations/signaux seraient l'expression directe de leurs passions (besoins, émotions), relevant de la communication et non du langage comme véhicule de la pensée désintéressée ou abstraite. \"Même une pie qui utilise le langage humain ne fait qu'exprimer des passions, elle communique\". Parler, c'est \"chercher à exprimer des pensées qui vont au-delà des besoins, des appétits et des ressentis\". L'exemple des sourds-muets inventant des systèmes de signes complexes témoigne de cette capacité proprement humaine.</p>
+                                      <p class="mt-1.5"><strong>Cas limites et perspective évolutionniste :</strong> Études sur Koko ou Kanzi (apprentissage de signes, combinaisons rudimentaires) questionnent la netteté de la frontière. Rappellent que, \"du point de vue de l'évolution, la différence animal/homme n'est pas fixée\" de manière absolue, suggérant un continuum.</p>`
+                        },
+                        {
+                            title: "1.1.5. Le Langage (Partie 3)",
+                            content: `<p><strong>Conditions d'apprentissage et intrication langage/pensée :</strong> L'apprentissage humain requiert une exposition précoce à un \"bain de langage\". L'idée d'une \"<span class="highlighted-term" data-term="grammaire-universelle">grammaire universelle</span>\" innée (Chomsky) postule des structures linguistiques fondamentales pré-câblées. L'absence d'exposition durant une \"fenêtre d'opportunité\" critique (1-5 ans) rend l'apprentissage du langage et de la pensée rationnelle complexe quasi impossible (enfants sauvages). Cela souligne l'intrication forte : \"on n'apprend pas à penser sans les mots\". Hegel : \"toute pensée qui ne trouve pas les mots est une pensée déficiente\". Boileau : \"ce qui se conçoit bien s'énonce clairement\". Débat : le langage exprime-t-il une pensée préexistante ou la structure-t-il activement (<span class="highlighted-term" data-term="hypothese-sapir-whorf">hypothèse de Sapir-Whorf</span>) ?</p>`
+                        },
+                        {
+                            title: "Conclusion sur la quête d'UNE différence spécifique",
+                            content: `<p>La quête d'UNE différence spécifique unique et absolue entre l'homme et l'animal apparaît de plus en plus comme une entreprise complexe, voire potentiellement illusoire. Chaque critère (conscience, temps, esprit, langage, technique) révèle des formes embryonnaires ou analogues chez certains animaux. Plutôt qu'une rupture nette, on observe des continuités, des différences de degré, ou un faisceau de caractéristiques dont la combinaison unique pourrait caractériser l'humain. La perspective évolutionniste suggère un continuum. La difficulté à définir la conscience et à prouver son absence chez l'animal rend ce critère délicat. Pédagogiquement, cela invite à une vision nuancée, à éviter les affirmations dogmatiques sur une prétendue supériorité humaine, et à discuter des implications éthiques. Le problème se déplace : il ne s'agit peut-être plus tant de savoir si l'homme est ou non un animal, mais de comprendre comment l'homme est un animal particulier, avec ses capacités et ses responsabilités spécifiques.</p>`
+                        }
+                    ]
+                },
+                {
+                    id: "societe",
+                    title: "II. Pourquoi les humains se mettent-ils ensemble ?",
+                    sections: [
+                        { 
+                            title: "1. Qu'est-ce que la vie en société ? (Partie 1)",
+                            content: `<p>Il est crucial de se défaire d'emblée de l'idée simpliste que la société ne serait qu'une simple somme d'individus préexistants et indépendants.</p>
+                                      <p class="mt-1.5"><strong>La société comme réalité <span class="highlighted-term" data-term="sui-generis">sui generis</span> :</strong> Le sociologue <span class="highlighted-term" data-term="durkheim">Émile Durkheim</span> a insisté sur le fait que la société est une réalité sui generis, c'est-à-dire une réalité qui a ses propres caractéristiques, ses propres lois de fonctionnement, et qui est irréductible à la somme de ses parties (les individus). Le \"<span class="highlighted-term" data-term="fait-social">fait social</span>\" (les manières d'agir, de penser et de sentir collectives) est extérieur à l'individu et exerce sur lui une contrainte. L'analogie de l'orchestre est éclairante : la musique produite n'est pas seulement la somme des sons de chaque instrument, mais une harmonie qui émerge de leur interaction coordonnée. Pour comprendre les phénomènes sociaux, une approche spécifique, la sociologie, est nécessaire, qui ne se réduit pas à la psychologie individuelle.</p>`
+                        },
+                        {
+                            title: "1. Qu'est-ce que la vie en société ? (Partie 2)",
+                            content: `<p><strong>La primauté du social sur l'individuel :</strong> La psychologie du développement nous apprend également que l'individu n'est pas premier chronologiquement. Le nouveau-né ne se distingue pas clairement de son environnement. Il y a un lent processus d'<span class="highlighted-term" data-term="individuation">individuation</span> par lequel l'enfant se différencie progressivement. Paradoxalement, les individus peuvent ensuite chercher à surmonter cette individuation dans des expériences de fusion (amour, groupe). L'anthropologie et l'archéologie confirment que la vie en groupe est aussi ancienne que les hominidés. Ainsi, \"l'individu n'est ni premier chronologiquement, ni premier logiquement\" ; l'individu et la société sont interdépendants. L'individuation est une différenciation relative : on se définit par rapport aux autres. <span class="highlighted-term" data-term="heidegger">Martin Heidegger</span> expliquait que le \"<span class="highlighted-term" data-term="das-man">On</span>\" (das Man), la sphère anonyme du social, est premier, et que le \"Je\" se constitue en s'en détachant.</p>`
+                        },
+                        {
+                            title: "1. Qu'est-ce que la vie en société ? (Partie 3)",
+                            content: `<p><strong>La sociabilité humaine : nature ou culture?</strong> La société semble omniprésente. La vie en société est un invariant transculturel. Pour <span class="highlighted-term" data-term="aristote">Aristote</span>, l'homme est fondamentalement un \"<span class="highlighted-term" data-term="zoon-politikon">animal politique</span>\" (zoon politikon), fait pour vivre en cité (<span class="highlighted-term" data-term="polis">polis</span>). C'est là qu'il accomplit sa nature et atteint le bien vivre. Celui qui vivrait hors société serait soit moins qu'un homme (bête), soit plus (dieu). Même l'ermite conserve les marques sociales de son éducation. Selon Aristote, les humains n'atteignent l'<span class="highlighted-term" data-term="autarcie">autarcie</span> et l'épanouissement qu'en cités-États. Cependant, la notion de \"nature humaine\" est \"obscure\" et \"invérifiable empiriquement\". La sociabilité peut-elle s'expliquer par l'intérêt personnel ?</p>
+                                      <p class="mt-1.5">Loin d'être un simple agrégat d'individus, la société est la condition de l'émergence de l'individualité. L'individu se construit par et dans le social. Il y a une dialectique constitutive entre l'individu et la société.</p>`
+                        },
+                        {
+                            title: "2. De l'anarchie à la société civile (Hobbes - Partie 1)",
+                            content: `<p>Pour explorer les raisons de la formation des sociétés, certains philosophes ont utilisé l'hypothèse d'un \"<span class="highlighted-term" data-term="etat-de-nature">état de nature</span>\", situation fictive antérieure à l'organisation sociale. <span class="highlighted-term" data-term="hobbes">Thomas Hobbes</span> est un théoricien majeur de cette approche.</p>
+                                      <p class="mt-1.5"><strong>L'état de nature selon Hobbes :</strong> C'est une anarchie totale, sans règles ni pouvoir coercitif. Chaque individu est mû par son intérêt : conservation de soi et recherche de puissance. Les ressources limitées et les désirs illimités mènent à la compétition. De la compétition naît la méfiance, puis la guerre : \"l'homme est un loup pour l'homme\" (<span class="highlighted-term" data-term="homo-homini-lupus">homo homini lupus</span>), et l'état de nature est une \"guerre de tous contre tous\" (<span class="highlighted-term" data-term="bellum-omnium">bellum omnium contra omnes</span>). La violence devient rationnelle et amorale (car pas de lois, donc ni juste ni injuste). La violence préventive est logique. Des modèles comme le \"Sugarscape\" tendent à confirmer cela.</p>`
+                        },
+                        {
+                            title: "2. De l'anarchie à la société civile (Hobbes - Partie 2)",
+                            content: `<p><strong>Le rôle de la propriété privée et le <span class="highlighted-term" data-term="contrat-social">contrat social</span> :</strong> Dans cette insécurité, la propriété privée est impossible à garantir durablement. Or, elle est fondamentale (agriculture, culture, échanges). Sa protection motive la sortie de l'état de nature. Par calcul rationnel, les individus consentent à un \"contrat social\" : ils renoncent à une partie de leur puissance et liberté naturelle (leur \"droit sur toutes choses\") et la transfèrent à une autorité souveraine, l'État (<span class="highlighted-term" data-term="leviathan">Léviathan</span>), chargée de maintenir ordre, paix et sécurité. Cette autorité doit être absolue pour être efficace.</p>
+                                      <p class="mt-1.5"><strong>Le dilemme de la puissance de l'État et la nature de la politique :</strong> L'État doit être puissant, mais cette puissance risque l'abus (Quis custodiet ipsos custodes?). Paradoxe de la souveraineté (dompteur et lion). La politique est une expérimentation permanente, sans solution universelle. La souveraineté : un pouvoir, sur des personnes, sur un territoire. Problèmes si pouvoirs rivaux ou souveraineté limitée (sécurité alimentaire, indépendance technologique, etc.).</p>
+                                      <p class="mt-1.5">La notion de \"<span class="highlighted-term" data-term="volonte-generale">volonté générale</span>\" (Rousseau) est critiquée comme une fiction, car il n'y aurait que des volontés individuelles à concilier. (Nuance : pour Rousseau, elle vise l'intérêt commun).</p>`
+                        },
+                        {
+                            title: "Tableau Comparatif : Théories du Contrat Social",
+                            content: `
+                                <table id="course-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Philosophe</th>
+                                            <th>État de nature</th>
+                                            <th>Raisons de sortir</th>
+                                            <th>Termes du contrat</th>
+                                            <th>Pouvoir politique</th>
+                                            <th>Liberté individuelle</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Thomas Hobbes</strong><br>(Léviathan)</td>
+                                            <td>Guerre de tous contre tous, insécurité, droit de nature sur tout. L'homme est un loup pour l'homme.</td>
+                                            <td>Peur de la mort violente, désir de paix et sécurité.</td>
+                                            <td>Cession de presque tous les droits (sauf droit à la vie si menacée par souverain) à un souverain absolu.</td>
+                                            <td>Souveraineté absolue et indivisible (monarchie). Souverain non lié par contrat.</td>
+                                            <td>Ce que la loi n'interdit pas. Sécurité > liberté.</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>John Locke</strong><br>(Traité du gouv. civil)</td>
+                                            <td>Liberté et égalité, loi naturelle (raison : ne pas nuire). Droits naturels (vie, liberté, propriété). Plutôt pacifique mais risque de guerre sans juge impartial.</td>
+                                            <td>Absence de juge commun, risque de justice privée. Mieux garantir droits naturels (propriété).</td>
+                                            <td>Cession du droit de se faire justice. Conservation des droits naturels protégés par l'État.</td>
+                                            <td>Souveraineté limitée par droits naturels et séparation des pouvoirs. Droit de résistance à l'oppression.</td>
+                                            <td>Protégée par la loi. L'État garantit libertés fondamentales.</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Jean-Jacques Rousseau</strong><br>(Du Contrat Social)</td>
+                                            <td>Innocence, bonheur relatif ("bon sauvage"), mais instable. Homme bon, société (mal organisée) le corrompt. Amour de soi vs amour-propre.</td>
+                                            <td>Développement propriété privée et inégalités mènent à conflits. Protéger chacun en restant libre.</td>
+                                            <td>Cession totale de tous les droits à la communauté. En se donnant à tous, on ne se donne à personne. Chacun gagne équivalent de ce qu'il perd.</td>
+                                            <td>Souveraineté populaire, inaliénable, indivisible (volonté générale). Loi = expression volonté générale.</td>
+                                            <td>Liberté naturelle (force indiv.) vs liberté civile (limitée par vol. gén.) et morale (obéissance à loi prescrite).</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <p class="mt-1.5 text-xs">Ce tableau met en évidence comment différentes conceptions de la nature humaine et de l'état de nature conduisent à des visions distinctes du rôle de l'État, des termes du contrat social et de la place de la liberté individuelle.</p>`
+                        },
+                        {
+                            title: "3. Qu'est-ce qu'une règle juste ? (Partie 1)",
+                            content: `<p>Une fois la société constituée, la question de la justice de ses règles devient primordiale.</p>
+                                      <p class="mt-1.5"><strong>Distinction morale et justice :</strong> La morale concerne le rapport de l'individu à lui-même (conscience, intentions, devoirs intérieurs). La justice est collective : régit les rapports entre au moins deux personnes (distribution des biens, droits, devoirs, résolution des conflits).</p>
+                                      <p class="mt-1.5"><strong>Définitions et questionnements sur la justice :</strong> Une définition : \"rapport harmonieux non conflictuel entre les personnes, caractérisé par l'absence de troubles sociaux\". Interrogation : un ordre social stable peut être injuste (esclavagisme). Justice ≠ absence de conflit. Platon (<span class="highlighted-term" data-term="la-republique">La République</span>), via le mythe de l'<span class="highlighted-term" data-term="anneau-gyges">anneau de Gygès</span> (rend invisible), explore si les hommes sont justes par contrainte (peur des sanctions) ou par motivation propre. Question : les hommes sont-ils motivés par la justice elle-même ou par intérêt/crainte ? Définition classique (Platon) : \"rendre à chacun ce qui lui revient\" ou \"ce qui lui est dû\". Difficulté : rendre ses clés de voiture à un ami ivre est-il juste ? Application nécessite interprétation selon le bien et les conséquences.</p>`
+                        },
+                        {
+                            title: "3. Qu'est-ce qu'une règle juste ? (Partie 2)",
+                            content: `<p><strong>Fait et Droit ; Inégalité naturelle et Justice artificielle :</strong> Distinction fondamentale : fait (ce qui est) vs droit (ce qui devrait être). Justice (norme) vise à corriger/améliorer l'état de fait. Inégalité = fait naturel (différences de capacités physiques, intellectuelles, etc., distribution selon courbe de Gauss). Justice = construction artificielle, effort humain pour instaurer une forme d'égalité (droits, chances, devant la loi) qui n'existe pas spontanément.</p>
+                                      <p class="mt-1.5"><strong>Critique du \"<span class="highlighted-term" data-term="droit-du-plus-fort">droit du plus fort</span>\" :</strong> Confusion force (fait) / droit (norme légitime). Rousseau : on peut être forcé de céder à la puissance, mais moralement obligé d'obéir qu'à un pouvoir légitime. \"Céder à la force est un acte de nécessité, non de volonté\". Force ne crée pas le droit. Réalité : rapports de force transformés en règles apparemment justes. Question : la justice n'est-elle souvent qu'une force institutionnalisée ? EN FAIT, souvent ; EN DROIT, elle peut et doit aspirer à autre chose. Progrès possible.</p>`
+                        },
+                         {
+                            title: "3. Qu'est-ce qu'une règle juste ? (Partie 3)",
+                            content: `<p><strong>Fondements de la légitimité des règles :</strong> Si le droit est une règle respectée sans force physique car jugée légitime, d'où vient la légitimité ? Raisons \"négatives\" : pression sociale, peur, conditionnement (pas vraie légitimité). Fondements \"positifs\" :</p>
+                                      <ul class="list-disc list-inside mt-1.5 space-y-1">
+                                        <li><strong>La Raison :</strong> Règle jugée juste car nécessité/cohérence/universalité comprises intellectuellement. Discursive, médiatisée, prétend à l'objectivité. Faiblesse : peut être instrumentalisée (justifier thèses injustes), rationalisation a posteriori.</li>
+                                        <li><strong>Le Sentiment :</strong> Justice/injustice ressentie par expérience affective immédiate (empathie, pitié, indignation). Intuitif, immédiat, subjectif. Faiblesse : variabilité, partialité, peut être trompeur/irrationnel.</li>
+                                      </ul>
+                                      <p class="mt-1.5"><strong>Légal et Légitime :</strong> Crucial de distinguer légal (conforme à loi écrite) / légitime (conforme à sentiment de justice profond, exigence morale). Idéalement coïncident, mais pas toujours (lois ségrégationnistes). Tension peut fonder droit de résistance/désobéissance civile. Idéal d'alignement = \"point d'horizon\", guide pour améliorer les lois.</p>
+                                      <p class="mt-1.5">Justice = construction humaine, artificielle, culturelle, menacée par \"droit du plus fort\". Recherche et mise en œuvre = tension dynamique fait/droit, légal/légitime. Fondements (raison/sentiment) ambivalents. Requiert effort constant, vigilance critique, débat démocratique.</p>`
+                        }
+                    ]
+                },
+                 {
+                    id: "science-verite",
+                    title: "III. La science a-t-elle le monopole de la vérité ?",
+                    sections: [
+                        { 
+                            title: "1. Les hommes face au monde : l'émergence de la science (Partie 1)",
+                            content: `<p>Ce chapitre interroge la nature de la connaissance scientifique, ses méthodes, sa portée et ses limites, en particulier par rapport à la question de la vérité. Les notions du programme abordées sont la vérité, la science, la nature, la raison et la religion.</p>
+                                      <p class="mt-1.5"><strong>La science comme démarche artificielle et culturelle :</strong> La science est une construction humaine, une démarche \"artificielle, non naturelle à l'être humain\", apparue à un moment précis de l'histoire (Grèce antique) et partie intégrante de la culture. Contrairement aux instincts ou intuitions, elle nécessite une éducation spécifique. Elle représente une rupture avec une existence \"simplement animale\" ou des modes de pensée pré-scientifiques (mythiques, magiques).</p>`
+                        },
+                        {
+                            title: "1. Les hommes face au monde : l'émergence de la science (Partie 2)",
+                            content: `<p><strong>Le \"<span class="highlighted-term" data-term="miracle-grec">miracle grec</span>\" et la philosophie comme incubateur :</strong> L'expression \"miracle grec\" désigne l'émergence simultanée (Grèce, VIe-IVe s. av. J.-C.) de plusieurs innovations culturelles : science (maths, astronomie), philosophie, droit, démocratie, art classique. La philosophie a joué un rôle d'\"incubateur\" pour de nombreuses disciplines devenues sciences autonomes (physique d'Aristote, éléments de psychologie, sociologie, logique, zoologie).</p>`
+                        },
+                        {
+                            title: "L'exemple du théorème de Pythagore et l'innovation de la démonstration",
+                            content: `<p>Le <span class="highlighted-term" data-term="theoreme-pythagore">théorème de Pythagore</span> illustre la différence entre connaissance pratique/utilitaire et connaissance théorique/démonstrative. Les Égyptiens utilisaient des propriétés géométriques (triangle 3,4,5) pour tracer des angles droits, un savoir-faire efficace sans recherche du \"pourquoi\". L'approche grecque se caractérise par la recherche du \"pourquoi\", la volonté de fonder les connaissances sur des preuves rationnelles. La <span class="highlighted-term" data-term="demonstration">démonstration</span> est une innovation grecque fondamentale : partir de propriétés connues (axiomes, postulats, etc.) et les transformer logiquement pour obtenir de nouvelles connaissances (théorèmes). Cette méthode déductive permet de découvrir des vérités non évidentes intuitivement.</p>`
+                        },
+                        {
+                            title: "Les mathématiques : un statut exceptionnel",
+                            content: `<p>Les mathématiques possèdent deux caractéristiques leur conférant un statut exceptionnel :</p>
+                                      <ol class="list-decimal list-inside mt-1.5 space-y-1">
+                                          <li>Elles permettent de découvrir des vérités nouvelles par la seule réflexion, sans observation empirique.</li>
+                                          <li>Une fois démontrés, les théorèmes mathématiques sont considérés vrais de manière nécessaire et universelle (\"pour l'éternité\"), contrairement aux théories des sciences empiriques (toujours révisables).</li>
+                                      </ol>
+                                      <p class="mt-1.5">Les mathématiques peuvent être définies comme \"la science des motifs\" (patterns), l'étude des structures, relations, formes, quantités. Elles traitent d'objets abstraits (espaces à n dimensions, nombres imaginaires). Cette capacité à découvrir des vérités apparemment absolues par l'esprit a été \"grisante\", donnant parfois l'impression d'accéder aux \"coulisses du monde\", et a pu alimenter une confiance excessive (<span class="highlighted-term" data-term="scientisme">scientisme</span>).</p>`
+                        },
+                        {
+                            title: "Classification des sciences",
+                            content: `<p>On peut classer les sciences :</p>
+                                      <ul class="list-disc list-inside mt-1.5 space-y-1">
+                                          <li><strong>Sciences formelles :</strong> Mathématiques, logique, informatique théorique. Objet = forme de la pensée (raisonnements corrects, structures abstraites). Pas d'observation nécessaire, usage central de la déduction.</li>
+                                          <li><strong>Sciences de l'observation (ou empiriques) :</strong> Partent de l'observation des phénomènes extérieurs pour en découvrir les lois.
+                                              <ul class="list-disc list-inside ml-4">
+                                                  <li><i>Sciences naturelles :</i> Objet = réalité extérieure non (ou peu) causée par l'homme (physique, chimie, biologie, etc.).</li>
+                                                  <li><i>Sciences humaines et sociales :</i> S'occupent des aspects liés aux comportements humains, sociétés, cultures (psychologie, sociologie, histoire, etc.). Difficultés méthodologiques spécifiques (complexité, subjectivité, liberté).</li>
+                                              </ul>
+                                          </li>
+                                      </ul>`
+                        },
+                        {
+                            title: "Conditions d'émergence de la science & Modes de raisonnement",
+                            content: `<p><strong>Conditions d'émergence de la science :</strong> Curiosité, désir de comprendre/maîtriser le monde, mais aussi conditions sociales, économiques, politiques favorables (prospérité, loisirs studieux, liberté de pensée et débat).</p>
+                                      <p class="mt-1.5"><strong>Les trois modes de raisonnement principaux :</strong> La méthode scientifique utilise divers modes de raisonnement. Trois sont importants : l'abduction, la déduction et l'induction. (Leur articulation est souvent complexe et itérative).</p>`
+                        },
+                        {
+                            title: "La Déduction",
+                            content: `<p>La <span class="highlighted-term" data-term="deduction">déduction</span> est le mode de raisonnement le plus fiable en termes de certitude logique. Elle passe d'une ou plusieurs prémisses (règles générales, propositions tenues pour vraies) à une conclusion qui en découle nécessairement. Si prémisses vraies et raisonnement valide, conclusion nécessairement vraie. Au cœur des sciences formelles (maths, logique), c'est une \"machine à produire de la vérité\". Force : certitude à 100%. Faiblesse (pour sciences empiriques) : \"presque stérile\" pour découvrir de nouvelles lois de la nature ; sert à tirer des conséquences vérifiables d'hypothèses ou à organiser les connaissances.</p>`
+                        },
+                        {
+                            title: "L'Induction",
+                            content: `<p>L'<span class="highlighted-term" data-term="induction">induction</span> est le mode de raisonnement le plus utile dans les sciences empiriques. Elle consiste à observer des cas particuliers et à inférer une règle générale ou une loi (ex: tous les métaux observés se dilatent à la chaleur -> \"Tous les métaux se dilatent à la chaleur\"). Permet de découvrir des \"lois de la Nature\". Cependant, elle se heurte au \"<span class="highlighted-term" data-term="probleme-induction">problème de l'induction</span>\" (Hume) : jamais de certitude déductive. Une généralisation à partir d'un nombre fini d'observations n'est jamais logiquement garantie pour tous les cas. Ce qui est découvert par induction est vrai \"jusqu'à preuve du contraire\" (ex: cygnes noirs). Nassim Nicholas Taleb a popularisé le concept d'événement \"<span class="highlighted-term" data-term="cygne-noir">Cygne Noir</span>\" (événement improbable car jamais observé, mais à impact majeur).</p>`
+                        },
+                        {
+                            title: "L'Abduction",
+                            content: `<p>L'<span class="highlighted-term" data-term="abduction">abduction</span> est souvent décrite comme une \"inférence à la meilleure explication\". Raisonnement pratique visant une hypothèse plausible face à des faits observés. Moins \"scientifique\" au sens strict de la preuve, elle joue un rôle crucial dans la découverte, la formulation d'hypothèses, le diagnostic (Sherlock Holmes, médecin). En science, l'abduction génère des hypothèses testées ensuite par déduction de conséquences observables et confrontation à l'expérience.</p>`
+                        },
+                        {
+                            title: "Conclusion sur la Science et la Vérité",
+                            content: `<p>Bien que la science (surtout les maths) puisse donner l'illusion d'un accès à des vérités éternelles, ses méthodes (induction, abduction) impliquent incertitude et révisabilité. Distinction sciences formelles (certitude déductive à partir d'axiomes) / sciences empiriques (théories basées sur observation/expérimentation). Problème de l'induction et \"Cygnes Noirs\" illustrent la faillibilité. Vérité scientifique (empirique) = \"vrai jusqu'à preuve du contraire\", corroborée mais susceptible d'être affinée/remise en cause. Science progresse par <span class="highlighted-term" data-term="refutation">réfutation</span> (Popper) autant que par confirmation. Elle ne détient pas le monopole de la vérité absolue. C'est une méthode rigoureuse, autocritique, perfectible pour approcher des vérités. Pédagogiquement : éviter le <span class="highlighted-term" data-term="scientisme">scientisme</span>, présenter la science avec ses succès et limites, et discuter d'autres formes de \"vérité\" (philosophique, religieuse, artistique).</p>`
+                        }
+                    ]
+                },
+                {
+                    id: "finalites",
+                    title: "IV. Quelles sont les finalités de la vie humaine ?",
+                    sections: [
+                        { 
+                            title: "Introduction : Les finalités ultimes de l'existence",
+                            content: `<p>Ce dernier chapitre aborde la question des finalités ultimes de l'existence humaine, c'est-à-dire des buts qui sont recherchés pour eux-mêmes, qui ont une valeur intrinsèque, et non pas seulement comme de simples moyens en vue d'autre chose. Les notions du programme abordées ici sont l'art, la raison, le bonheur, le devoir et la liberté.</p>
+                                      <p class="mt-1.5">Qu'est-ce qui donne sens et valeur à une vie humaine? Quatre finalités principales sont identifiées comme candidates :</p>
+                                      <ul class="list-disc list-inside mt-1.5 space-y-1">
+                                          <li><strong>La religion :</strong> Pour les personnes religieuses, la relation à Dieu, la vie spirituelle, le salut ou l'accomplissement d'une volonté divine peuvent constituer le couronnement de l'existence.</li>
+                                          <li><strong>L'art et l'expérience esthétique :</strong> La création artistique ou la contemplation de la beauté sont souvent valorisées pour elles-mêmes. L'expérience esthétique peut procurer une satisfaction profonde.</li>
+                                          <li><strong>La morale et le devoir :</strong> Agir moralement, accomplir son devoir, rechercher le bien et la justice peuvent être considérés comme des fins en soi, conférant dignité et valeur à la vie.</li>
+                                          <li><strong>Le bonheur :</strong> Souvent considéré comme \"la finalité la plus ultime\". Toutes les autres fins peuvent être vues comme des moyens ou des composantes du bonheur. Cette conception <span class="highlighted-term" data-term="eudemonisme">eudémoniste</span> remonte à Aristote (<span class="highlighted-term" data-term="eudaimonia">eudaimonia</span> = souverain bien, activité de l'âme conforme à la vertu).</li>
+                                      </ul>`
+                        },
+                        {
+                            title: "Les sources de la moralité (Partie 1)",
+                            content: `<p>Si agir moralement est une finalité, d'où viennent nos conceptions du bien et du mal? Plusieurs sources :</p>
+                                      <ul class="list-disc list-inside mt-1.5 space-y-1">
+                                          <li><strong>Dieu (ou entité supérieure) :</strong> Règles morales comme commandements divins.</li>
+                                          <li><strong>La Raison :</strong> Philosophie des Lumières (Kant) : fonder la morale sur la raison (universalisation, cohérence, respect dignité humaine).</li>
+                                          <li><strong>Le Sentiment (ou conscience morale) :</strong> Rousseau, Hume : expérience affective (pitié, sympathie, indignation) à l'origine des jugements moraux.</li>
+                                          <li><strong>La Société :</strong> Règles morales comme constructions sociales (pratiques, coutumes, traditions). Peut conduire au relativisme moral.</li>
+                                      </ul>`
+                        },
+                        {
+                            title: "Les sources de la moralité (Partie 2)",
+                            content: `<p><strong>Critiques du relativisme et de la morale naturelle :</strong> Argument de Montaigne : diversité des mœurs contredit l'idée de règles morales universelles (\"on ne peut trouver aucune règle morale universellement acceptée\"). Même la prohibition du meurtre a des exceptions. Tenter de fonder une \"morale naturelle\" en observant la nature est critiqué car repose sur interprétation subjective. Nombreuses philosophies (taoïsme, stoïcisme) ont prétendu dériver des règles de la nature, mais aboutissent à des conclusions différentes. Erreur : confusion descriptif (ce qui est) / normatif (ce qui devrait être). On ne peut déduire un devoir-être d'un être (<span class="highlighted-term" data-term="sophisme-naturaliste">sophisme naturaliste</span>). Constructions morales humaines (propriété, égalité, dignité) sont souvent des corrections/dépassements de l'état \"naturel\".</p>`
+                        },
+                        {
+                            title: "Deux grandes familles de critères moraux",
+                            content: `<p>Pour juger de la moralité d'une action, deux grandes approches :</p>
+                                      <ul class="list-disc list-inside mt-1.5 space-y-1">
+                                          <li><strong>Le <span class="highlighted-term" data-term="deontologisme">déontologisme</span> (morale du devoir) :</strong> Juge une action selon sa conformité à des règles/principes/devoirs, indépendamment des conséquences. Accent sur l'intention et le respect de la loi morale. Ex: morales religieuses, éthique de Kant (<span class="highlighted-term" data-term="imperatif-categorique">impératif catégorique</span>).</li>
+                                          <li><strong>Le <span class="highlighted-term" data-term="consequentialisme">conséquentialisme</span> (morale des conséquences) :</strong> Juge une action selon ses résultats/effets/utilité. Bonne si conséquences positives, mauvaise si négatives. Ex: <span class="highlighted-term" data-term="utilitarisme">utilitarisme</span> (Bentham, Mill) : maximiser le bonheur du plus grand nombre.</li>
+                                      </ul>`
+                        },
+                        {
+                            title: "Tableau: Déontologisme vs Conséquentialisme",
+                            content: `
+                                <table id="course-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Critère</th>
+                                            <th>Déontologisme</th>
+                                            <th>Conséquentialisme</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Fondement du jugement</td>
+                                            <td>Conformité à règles, devoirs, principes universels.</td>
+                                            <td>Résultats, effets, conséquences de l'action.</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Rôle de l'intention</td>
+                                            <td>Primordial (agir par devoir).</td>
+                                            <td>Secondaire par rapport aux résultats.</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Rôle des conséquences</td>
+                                            <td>Non déterminant pour valeur morale de l'action.</td>
+                                            <td>Déterminant.</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Force</td>
+                                            <td>Repères clairs, stables. Souligne intégrité, droits fondamentaux.</td>
+                                            <td>Pragmatisme, flexibilité, prise en compte du bien-être réel.</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Faiblesse</td>
+                                            <td>Rigorisme, conflits de devoirs, ignorer conséquences désastreuses.</td>
+                                            <td>Difficile de prévoir conséquences, risque de sacrifier minorités/droits, difficile de mesurer/comparer utilités.</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Philosophe emblématique</td>
+                                            <td>Emmanuel Kant</td>
+                                            <td>Jeremy Bentham, John Stuart Mill</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Exemple (dilemme du tramway)</td>
+                                            <td>Souvent refus de tuer intentionnellement (violation principe).</td>
+                                            <td>Souvent acceptation de dévier (minimiser morts).</td>
+                                        </tr>
+                                    </tbody>
+                                </table>`
+                        },
+                        {
+                            title: "Universalisme, Normativité et Obligations",
+                            content: `<p>L'<span class="highlighted-term" data-term="universalisme-moral">universalisme en morale</span> : thèse selon laquelle il existe des principes moraux s'appliquant à tous, sans exception. Tend à ne pas admettre de circonstances atténuantes.</p>
+                                      <p class="mt-1.5">La <span class="highlighted-term" data-term="normativite-morale">normativité</span> caractérise une règle morale : combine énoncé d'une règle (ce qu'il faut faire/ne pas faire) et sentiment d'obligation de la respecter (contrainte morale impérative).</p>
+                                      <p class="mt-1.5">Intensités d'obligation morale (échelle) :</p>
+                                      <ol class="list-decimal list-inside mt-1.5 space-y-1">
+                                          <li>Préférences : personnelles, subjectives, pas d'obligation morale.</li>
+                                          <li>Déontologie professionnelle : règles spécifiques à un métier.</li>
+                                          <li>Éthique personnelle : règles qu'un individu se donne pour orienter sa vie.</li>
+                                          <li>Morale (sens fort) : règles considérées universelles, s'imposant à tous (respect, justice).</li>
+                                      </ol>`
+                        },
+                        {
+                            title: "Le débat sur le mensonge : Kant vs Constant",
+                            content: `<p>Problème des circonstances atténuantes en morale universaliste (risque de "pente glissante"). Kant sur le mensonge : devoir de dire la vérité est un <span class="highlighted-term" data-term="imperatif-categorique">impératif catégorique</span>, absolu. Même un mensonge "pieux" est mauvais (dégrade parole humaine, sape confiance, viole respect d'autrui). Conflit moral : devoir vs inclinations. Kant : sacrifier inclinations au devoir.</p>
+                                      <p class="mt-1.5">Critique de Benjamin Constant : Kant exagère conséquences d'un mensonge particulier. Constant : devoir de vérité est conditionnel. Introduit notion de "droit à la vérité" : on ne doit la vérité qu'à celui qui y a droit. Personne avec intentions nuisibles (meurtrier à la porte) perd son droit à la vérité. Mentir pour protéger une vie peut devenir un devoir. Lien indissociable devoir/droit : "Là où il n'y a pas de droits, il n'y a pas de devoirs." Droit à la vérité subordonné au principe de non-nuisance.</p>
+                                      <p class="mt-1.5">Conclusion du débat : tension entre aspiration à principes universels (Kant) et nécessité de prendre en compte singularité des situations, conséquences, droits spécifiques (Constant). Vie morale exigerait jugement prudentiel (<span class="highlighted-term" data-term="phronesis">phronesis</span> d'Aristote), capacité à discerner en articulant universalité des principes et particularité des contextes.</p>`
+                        },
+                        {
+                            title: "Art : I. Le Problème Central du Jugement Esthétique (1/2)",
+                            content: `<p>Le jugement sur l'œuvre d'art oscille entre subjectivité radicale et aspiration à l'objectivité.</p>
+                                      <p class="mt-1.5"><strong>La subjectivité de l'expérience esthétique :</strong> L'effet d'une œuvre (beauté, puissance expressive) semble éminemment subjectif. Adage : "des goûts et des couleurs, on ne discute pas". Préférences personnelles (tempérament, vécu), histoire individuelle, caractère privé de l'émotion esthétique. Si beauté "dans l'œil de celui qui regarde", jugement normatif devient vain.</p>
+                                      <p class="mt-1.5"><strong>La tendance humaine à l'évaluation objective de l'art :</strong> Pourtant, on se comporte comme si l'art pouvait être jugé objectivement. Recherche de règles de la beauté (Antiquité : canon de Polyclète, proportions). Pratique de la critique d'art (argumenter sur valeur d'une œuvre). Institutions artistiques (musées, académies, prix) reposent sur idée de distinction et hiérarchisation possibles.</p>`
+                        },
+                        {
+                            title: "Art : I. Le Problème Central du Jugement Esthétique (2/2)",
+                            content: `<p><strong>Une contradiction fondamentale :</strong> Les humains semblent adhérer simultanément à ces deux aspects contradictoires. Reconnaissance de la subjectivité des goûts ET poursuite de conduites objectivantes (défendre ses choix, chercher à convertir, consulter critiques). Engendre une <span class="highlighted-term" data-term="dissonance-cognitive">dissonance cognitive</span>. Tension interne : on veut que jugement soit personnel ET partageable.</p>
+                                      <p class="mt-1.5"><strong>L'exigence d'universalité et l'impact interpersonnel :</strong> L'idée que le <span class="highlighted-term" data-term="jugement-esthetique">jugement esthétique</span> n'est "qu'une affaire de goût" peine à rendre compte de l'impact des divergences esthétiques sur nos relations. Déception face au désaccord avec personne estimée. Inversement, partage d'admiration crée communion. Kant (<span class="highlighted-term" data-term="critique-faculte-juger">Critique de la faculté de juger</span>) : quand on dit "c'est beau", on exige l'assentiment d'autrui sans pouvoir le prouver par concepts. Cette exigence d'universalité, sans fondement objectif démontrable, est le nœud du problème esthétique.</p>`
+                        },
+                        {
+                            title: "Art : II. Manifestations et Analyses du Problème Esthétique",
+                            content: `<p><strong>Les <span class="highlighted-term" data-term="canon-de-beaute">canons de beauté</span> et les règles de l'art :</strong> Recherche constante. Fondements apparents : harmonie, symétrie, mesure, ordre. Difficulté de spécification : règles souvent dépendantes d'époque/culture/style, paraissent périmées/arbitraires avec évolution. Révélateurs culturels : en disent plus sur valeurs/croyances des cultures qui les produisent que sur nature universelle de la beauté.</p>
+                                      <p class="mt-1.5"><strong>La beauté comme idéal insaisissable :</strong> L'art poursuit peut-être un idéal irréel. Art comme correction de la nature : perfection que nature n'offre qu'imparfaitement. Exemple de <span class="highlighted-term" data-term="zeuxis">Zeuxis</span> peignant Hélène : compose portrait idéal à partir de perfections de plusieurs modèles. Beauté comme synthèse idéale, perfection irréelle. Question : beauté découverte ou inventée ?</p>`
+                        },
+                        {
+                            title: "Art : III. L'Artiste et le Processus de Création (1/2)",
+                            content: `<p><strong>Compétence technique vs. véritable artiste :</strong> Distinction maîtrise technique / créateur. Nécessité de la maîtrise technique (dessin, instrument, etc.). Insuffisance de la virtuosité : perfection technique ne suffit pas. Artisan habile, copiste talentueux ≠ artiste au sens fort si manque d'originalité, profondeur, vision singulière. Artiste véritable invente, exprime, révèle du nouveau.</p>
+                                      <p class="mt-1.5"><strong><span class="highlighted-term" data-term="talent-kant">Talent</span> vs. <span class="highlighted-term" data-term="genie-kant">Génie</span> (Kant) :</strong></p>
+                                      <ul class="list-disc list-inside mt-1.5 space-y-1">
+                                          <li>Talent : capacité à apprendre, imiter, appliquer règles établies. S'acquiert.</li>
+                                          <li>Génie : disposition innée, capacité créatrice d'inventer formes/règles nouvelles, modèles pour d'autres. Ouvre nouvelles voies, brise conventions. Œuvre exemplaire. Pour Kant, "favori de la nature", productions non explicables par préceptes.</li>
+                                      </ul>`
+                        },
+                        {
+                            title: "Art : III. L'Artiste et le Processus de Création (2/2)",
+                            content: `<p><strong><span class="highlighted-term" data-term="inspiration-art">Inspiration</span> vs. travail :</strong> Génie souvent associé à inspiration (souffle divin, illumination). Inspiration comme "boîte noire" : œuvre surgirait magiquement. Vision plus réaliste : importance cruciale du travail. Moment d'intuition doit être travaillé, transformé, affiné.</p>
+                                      <ul class="list-disc list-inside mt-1.5 space-y-1">
+                                          <li>Travail de la forme : lutte avec matière, exploration technique, choix, obstacles.</li>
+                                          <li>Éthique du travail : persévérance, discipline, exigence.</li>
+                                          <li>Développement d'un style : progressif, par expérimentation.</li>
+                                          <li>Achèvement de l'œuvre : capacité à mener projet à terme.</li>
+                                      </ul>
+                                      <p class="mt-1.5">Valeur d'une œuvre réside moins dans inspiration initiale que dans travail d'achèvement.</p>`
+                        },
+                        {
+                            title: "Art : IV. La Nature de l'\"Aura\" Artistique (1/2)",
+                            content: `<p>L'œuvre d'art est souvent parée d'une <span class="highlighted-term" data-term="aura-benjamin">aura</span> ou "magie". Origine et nature de ce prestige ?</p>
+                                      <p class="mt-1.5"><strong>L'unicité et l'\"aura\" (Walter Benjamin) :</strong> Aura liée au caractère unique, original, non reproductible de l'œuvre traditionnelle. "Hic et nunc" (ici et maintenant) de l'original, authenticité. Reproduction technique (photo, cinéma) fait perdre cette aura, valeur cultuelle. Œuvre reproduite détachée de son lieu/temps d'origine. Unicité confère prestige, exclusivité, irremplaçabilité, fragilité. Fétichisme de l'original.</p>`
+                        },
+                        {
+                            title: "Art : IV. La Nature de l'\"Aura\" Artistique (2/2)",
+                            content: `<p><strong>L'absence de finalité explicite (la gratuité) :</strong> Autre source du statut particulier de l'art. Inutilité fonctionnelle : œuvre ne "sert à" rien d'autre qu'elle-même (Kant : "Le beau est ce qui plaît universellement sans concept"). Mouvement de "<span class="highlighted-term" data-term="art-pour-art">l'art pour l'art</span>" (XIXe) : justification en soi-même (perfection formelle, puissance expressive), non dans objectifs moraux, politiques, etc. Confère liberté, noblesse.</p>
+                                      <p class="mt-1.5"><strong>La fascination de l'exécution virtuose :</strong> Effet de "magie" peut venir de perception d'habileté extraordinaire. Dépassement des attentes (complexité, rapidité, subtilité) suscite admiration. Universel (sport, artisanat). En art, virtuosité au service d'intention expressive contribue à impact.</p>
+                                      <p class="mt-1.5"><strong>Le discours de légitimation culturelle :</strong> Valeur/prestige aussi produit d'un discours. Culture (écoles, musées, critiques) nous apprend à identifier/apprécier/valoriser. Apprentissage du regard. Institutions consacrent œuvres. Discours critique/historique construit signification. Ce "<span class="highlighted-term" data-term="capital-symbolique">capital symbolique</span>" (Bourdieu) ou "<span class="highlighted-term" data-term="monde-art">monde de l'art</span>" (Danto) confère supériorité "magique".</p>`
+                        }
+                    ]
+                }
+            ],
+            definitions: {
+                "philosophie": "Démarche intellectuelle singulière, une manière spécifique d'interroger le monde, nos connaissances et nos propres pensées. Vise à former l'esprit à une réflexivité critique et à une capacité d'analyse conceptuelle.",
+                "questions-ultimes": "Interrogations fondamentales qui touchent à l'existence humaine et à la nature de la réalité (sens de la vie, nature de la conscience, existence de Dieu, fondements de la morale, structure du réel). La philosophie interroge la valeur et la légitimité des fins elles-mêmes.",
+                "sophia": "Terme grec signifiant sagesse. En philosophie, elle représente un art de bien vivre, une quête d'une existence épanouie, vertueuse et lucide.",
+                "aporie": "Du grec 'aporia' (absence de passage, difficulté). En philosophie, une difficulté logique qui semble insoluble, une contradiction dans un raisonnement.",
+                "esprit-critique": "Capacité à remettre en question les préjugés, les évidences admises sans examen, les dogmes et les idées reçues. Implique de prendre du recul pour juger et évaluer (du grec 'krinein' : juger, séparer, discerner).",
+                "ingenierie-conceptuelle": "Démarche philosophique qui consiste à inventer ou à améliorer des concepts pour affiner notre compréhension du réel et obtenir une meilleure 'carte mentale' de la réalité.",
+                "doxa": "Terme grec désignant l'opinion commune, les croyances admises sans examen critique. Socrate s'opposait à la doxa par sa méthode de questionnement.",
+                "maieutique": "Terme socratique (du grec 'maieutikê', art de l'accoucheuse). Méthode par laquelle Socrate, en feignant l'ignorance et en posant des questions, aidait ses interlocuteurs à 'accoucher' de leurs propres pensées et à en examiner la validité.",
+                "conscience-reflexive": "Capacité de l'esprit à se prendre lui-même comme objet de pensée, à être conscient de sa propre conscience. Souvent considérée comme une spécificité humaine.",
+                "langage-articule": "Système de communication complexe, propre à l'homme, caractérisé par une double articulation (phonèmes/mots, mots/phrases) permettant la création d'une infinité de significations et l'expression de pensées abstraites.",
+                "evolution-artificielle": "Processus par lequel l'homme prend en main sa propre évolution (par l'éducation, les modifications corporelles, etc.) et celle d'autres espèces, se distinguant de l'évolution naturelle.",
+                "conscience-morale": "Capacité à juger ses propres actions et celles d'autrui selon des critères de bien et de mal, de juste et d'injuste.",
+                "phenomenologie": "Courant philosophique qui étudie les phénomènes tels qu'ils apparaissent à la conscience, en cherchant à décrire l'expérience vécue. Merleau-Ponty, par exemple, l'a appliquée à la perception et au corps propre.",
+                "stade-du-miroir": "Concept de Jacques Lacan désignant une phase du développement de l'enfant (entre 6 et 18 mois) où il reconnaît son image dans le miroir, ce qui est fondateur pour la constitution de son identité et la conscience de soi comme 'Je'.",
+                "probleme-corps-esprit": "Question philosophique fondamentale concernant la nature de la relation entre l'esprit (ou la conscience) et le corps (ou le cerveau matériel).",
+                "qualia": "Terme philosophique désignant les qualités subjectives de l'expérience consciente, le 'ce que cela fait' d'éprouver quelque chose (par exemple, la rougeur du rouge, la douleur d'une piqûre). Au cœur du 'problème difficile de la conscience'.",
+                "solipsisme": "Position philosophique selon laquelle seule sa propre conscience et ses propres expériences existent de manière certaine, le monde extérieur et les autres esprits étant sujets au doute.",
+                "umwelt": "Terme allemand introduit par Jakob von Uexküll signifiant 'monde environnant' ou 'monde propre'. Désigne le monde tel qu'il est perçu et vécu par une espèce animale donnée, en fonction de ses capacités sensorielles et de ses besoins spécifiques.",
+                "anthropomorphisme": "Tendance à attribuer des caractéristiques, des émotions ou des intentions humaines à des animaux, des objets ou des phénomènes naturels.",
+                "memoire-episodique": "Type de mémoire à long terme qui concerne le souvenir d'événements spécifiques personnellement vécus, situés dans un contexte temporel et spatial. Sa présence chez l'animal est débattue.",
+                "retention": "Dans la phénoménologie de la conscience du temps (Husserl, inspiré d'Augustin), la rétention est la conscience du passé immédiat qui vient juste de s'écouler et qui est encore 'retenu' dans le présent vécu.",
+                "protention": "Dans la phénoménologie de la conscience du temps, la protention est l'anticipation du futur immédiat, la manière dont le présent vécu est orienté vers ce qui va advenir.",
+                "theorie-de-l-esprit": "Capacité cognitive à attribuer des états mentaux (croyances, désirs, intentions, émotions) à soi-même et à autrui, et à comprendre que les autres ont des perspectives différentes.",
+                "double-articulation": "Caractéristique fondamentale du langage humain. Première articulation : combinaison d'unités minimales non significatives (phonèmes) pour former des unités significatives (morphèmes/mots). Seconde articulation : combinaison de mots selon des règles grammaticales pour former une infinité de phrases.",
+                "grammaire-universelle": "Hypothèse de Noam Chomsky selon laquelle il existerait des structures linguistiques fondamentales et des principes innés, communs à toutes les langues humaines, qui seraient pré-câblés dans le cerveau humain et faciliteraient l'acquisition du langage.",
+                "hypothese-sapir-whorf": "Théorie linguistique selon laquelle la structure de la langue que nous parlons influence la manière dont nous percevons et conceptualisons le monde (relativisme linguistique).",
+                "sui-generis": "Expression latine signifiant 'de son propre genre'. Utilisée pour décrire quelque chose qui est unique, qui constitue une classe à part entière et ne peut être réduit à d'autres catégories. En sociologie (Durkheim), la société est une réalité sui generis.",
+                "durkheim": "Émile Durkheim (1858-1917) : Sociologue français considéré comme l'un des fondateurs de la sociologie moderne. Connu pour ses travaux sur la division du travail social, le suicide, et les formes élémentaires de la vie religieuse. Il a insisté sur l'étude des faits sociaux comme des 'choses'.",
+                "fait-social": "Concept clé de Durkheim. Manières d'agir, de penser et de sentir, extérieures à l'individu, et qui sont douées d'un pouvoir de coercition en vertu duquel elles s'imposent à lui.",
+                "individuation": "Processus par lequel un être devient un individu distinct, séparé des autres et de son environnement. En psychologie du développement, c'est la prise de conscience progressive de son individualité par l'enfant.",
+                "heidegger": "Martin Heidegger (1889-1976) : Philosophe allemand majeur du XXe siècle, figure centrale de l'existentialisme et de la phénoménologie. Son œuvre principale est 'Être et Temps' (Sein und Zeit).",
+                "das-man": "Terme allemand utilisé par Heidegger, souvent traduit par 'le On'. Désigne la sphère anonyme de l'existence quotidienne, la manière impersonnelle d'être en société, dominée par les conventions et les opinions moyennes. L'authenticité se gagne en se détachant du 'On'.",
+                "aristote": "Aristote (384-322 av. J.-C.) : Philosophe grec antique, élève de Platon et précepteur d'Alexandre le Grand. Son œuvre immense couvre la logique, la métaphysique, l'éthique, la politique, la poétique, la physique, la biologie. Figure majeure de la pensée occidentale.",
+                "zoon-politikon": "Expression grecque utilisée par Aristote, signifiant 'animal politique' ou 'animal social'. Pour Aristote, l'homme est par nature un être destiné à vivre en cité (polis), car c'est seulement en société qu'il peut accomplir pleinement sa nature et atteindre le bonheur.",
+                "polis": "Terme grec désignant la cité-État dans la Grèce antique, unité politique et sociale fondamentale. Pour les Grecs, la polis était le cadre par excellence de la vie civilisée et de la participation citoyenne.",
+                "autarcie": "Du grec 'autarkeia' (se suffire à soi-même). État d'autosuffisance, où un individu ou une communauté peut subvenir à ses propres besoins sans dépendre de l'extérieur. Pour Aristote, la cité-État vise une forme d'autarcie.",
+                "etat-de-nature": "Concept philosophique (notamment chez Hobbes, Locke, Rousseau) désignant une situation hypothétique des êtres humains avant ou sans organisation sociale et politique. Sert à penser l'origine et la légitimité du pouvoir politique.",
+                "hobbes": "Thomas Hobbes (1588-1679) : Philosophe anglais, connu pour son œuvre majeure 'Léviathan'. Théoricien de l'absolutisme politique, il décrit l'état de nature comme une 'guerre de tous contre tous', justifiant un pouvoir souverain fort pour garantir la paix civile.",
+                "homo-homini-lupus": "Expression latine signifiant 'l'homme est un loup pour l'homme'. Attribuée à Plaute, elle est reprise par Hobbes pour caractériser les relations humaines dans l'état de nature, marquées par la méfiance et l'agression.",
+                "bellum-omnium": "Expression latine (bellum omnium contra omnes) signifiant 'la guerre de tous contre tous'. Utilisée par Hobbes pour décrire l'état de nature.",
+                "contrat-social": "Théorie politique selon laquelle l'autorité politique et la société civile résultent d'un accord (contrat) passé entre les individus, par lequel ils renoncent à une partie de leur liberté naturelle en échange de la sécurité et des avantages de la vie en commun.",
+                "leviathan": "Titre de l'œuvre majeure de Thomas Hobbes. Le Léviathan est une métaphore biblique (monstre marin) utilisée par Hobbes pour désigner l'État souverain, doté d'un pouvoir absolu nécessaire pour maintenir l'ordre et la paix.",
+                "volonte-generale": "Concept central de la philosophie politique de Jean-Jacques Rousseau. Désigne la volonté du corps politique visant l'intérêt commun, et non la somme des volontés particulières. Elle est le fondement de la loi légitime.",
+                "la-republique": "Titre d'un des dialogues majeurs de Platon, où il explore la nature de la justice, la cité idéale et la théorie des Formes. Contient des passages célèbres comme l'allégorie de la caverne et le mythe de Gygès.",
+                "anneau-gyges": "Mythe raconté par Glaucon dans 'La République' de Platon. Gygès, un berger, trouve un anneau qui le rend invisible. Il l'utilise pour commettre des injustices impunément. Le mythe interroge si les hommes sont justes par nature ou par crainte des sanctions." ,
+                "droit-du-plus-fort": "Idée selon laquelle la force physique ou la puissance confère un droit de commander ou de dominer. Critiquée par des philosophes comme Rousseau, qui distinguent la force (un fait) du droit (une norme légitime).",
+                "miracle-grec": "Expression désignant l'émergence remarquable et concomitante de la philosophie rationnelle, de la science démonstrative, de la démocratie et de formes d'art classique dans la Grèce antique (principalement entre le VIe et le IVe siècle av. J.-C.).",
+                "theoreme-pythagore": "Théorème fondamental de la géométrie euclidienne qui établit une relation entre les longueurs des côtés d'un triangle rectangle : le carré de la longueur de l'hypoténuse est égal à la somme des carrés des longueurs des deux autres côtés (a² + b² = c²).",
+                "demonstration": "En logique et en mathématiques, une démonstration est un raisonnement déductif qui établit la vérité d'une proposition (théorème) à partir de prémisses acceptées (axiomes, postulats, définitions ou théorèmes déjà démontrés) en utilisant des règles d'inférence valides.",
+                "scientisme": "Position philosophique qui considère que la science expérimentale est la seule source légitime de connaissance sur le monde, et que les méthodes scientifiques peuvent et doivent s'appliquer à tous les domaines de la vie humaine, y compris la morale, la politique ou la métaphysique. Souvent perçu comme une confiance excessive ou dogmatique dans la science.",
+                "deduction": "Mode de raisonnement logique qui part de prémisses générales pour aboutir à une conclusion particulière qui en découle nécessairement. Si les prémisses sont vraies et le raisonnement valide, la conclusion est certaine.",
+                "induction": "Mode de raisonnement qui consiste à inférer une règle générale ou une loi à partir de l'observation d'un certain nombre de cas particuliers. Les conclusions de l'induction sont probables mais non logiquement certaines.",
+                "probleme-induction": "Problème philosophique (soulevé notamment par David Hume) concernant la justification de l'inférence inductive. Il n'y a pas de garantie logique qu'une régularité observée dans le passé se poursuivra dans le futur.",
+                "cygne-noir": "Concept popularisé par Nassim Nicholas Taleb pour désigner un événement rare, imprévisible (car en dehors des attentes basées sur l'expérience passée), et ayant un impact majeur. Il n'est souvent expliqué qu'a posteriori.",
+                "abduction": "Mode de raisonnement, aussi appelé 'inférence à la meilleure explication', qui consiste à formuler une hypothèse plausible pour expliquer un ensemble de faits observés ou un phénomène surprenant. Fréquent dans la découverte scientifique et le diagnostic.",
+                "refutation": "En épistémologie (notamment chez Karl Popper), la réfutation est le processus par lequel une théorie scientifique est prouvée fausse par une observation ou une expérience qui la contredit. Popper considère la réfutabilité comme un critère de scientificité.",
+                "eudemonisme": "Doctrine philosophique qui considère le bonheur (eudaimonia en grec) comme le souverain bien et le but ultime de la vie humaine. Aristote est un représentant majeur de l'eudémonisme.",
+                "eudaimonia": "Terme grec généralement traduit par 'bonheur', 'épanouissement' ou 'floraison humaine'. Pour Aristote, c'est le souverain bien, qui consiste en une activité de l'âme conforme à la vertu la plus parfaite, et non un simple état de plaisir passif.",
+                "sophisme-naturaliste": "Erreur de raisonnement qui consiste à prétendre déduire une proposition normative (un 'devoir-être', une valeur morale) à partir de propositions purement descriptives (un 'être', un fait naturel). Dénoncé par David Hume puis G.E. Moore.",
+                "deontologisme": "Théorie éthique qui juge la moralité d'une action en fonction de sa conformité à des devoirs, des règles ou des principes, indépendamment de ses conséquences. L'éthique de Kant en est un exemple paradigmatique.",
+                "imperatif-categorique": "Concept central de l'éthique kantienne. C'est un commandement de la raison qui s'applique de manière universelle et inconditionnelle, sans égard pour les désirs ou les conséquences. Kant en donne plusieurs formulations, dont : 'Agis uniquement d'après la maxime qui fait que tu peux vouloir en même temps qu'elle devienne une loi universelle.'",
+                "consequentialisme": "Ensemble de théories éthiques qui jugent la moralité d'une action uniquement en fonction de ses conséquences. Une action est bonne si ses conséquences sont globalement positives, mauvaise si elles sont négatives.",
+                "utilitarisme": "Forme de conséquentialisme (développée par Jeremy Bentham et John Stuart Mill) qui soutient qu'une action est juste si elle tend à maximiser le bonheur ou le bien-être total du plus grand nombre de personnes concernées.",
+                "universalisme-moral": "Thèse selon laquelle il existe des principes ou des valeurs morales qui sont valables pour tous les êtres humains, en tout temps et en tout lieu, indépendamment des cultures ou des contextes particuliers.",
+                "normativite-morale": "Caractère d'une règle ou d'un jugement moral qui exprime une obligation, un 'devoir-être', et pas seulement une description de faits. Implique une dimension prescriptive.",
+                "phronesis": "Terme grec traduit par 'prudence' ou 'sagesse pratique'. Chez Aristote, c'est la vertu intellectuelle qui permet de bien délibérer sur ce qui est bon et utile pour mener une vie accomplie, en tenant compte des particularités des situations.",
+                "dissonance-cognitive": "En psychologie, état de tension inconfortable ressenti lorsqu'une personne a simultanément des croyances, des idées ou des valeurs contradictoires, ou lorsque ses actions sont en désaccord avec ses croyances.",
+                "jugement-esthetique": "Jugement portant sur la beauté ou la laideur d'un objet, ou plus largement sur ses qualités esthétiques. Sa nature (subjective ou objective) est un problème central en philosophie de l'art.",
+                "critique-faculte-juger": "Titre de la troisième grande Critique d'Emmanuel Kant (Kritik der Urteilskraft, 1790), où il analyse notamment le jugement esthétique (jugement de goût) et le jugement téléologique (sur les finalités dans la nature).",
+                "canon-de-beaute": "Ensemble de règles, de proportions et de critères définissant l'idéal de beauté dans une culture ou une époque donnée, particulièrement dans les arts visuels.",
+                "zeuxis": "Peintre grec de l'Antiquité (Ve siècle av. J.-C.), célèbre pour son réalisme et son habileté technique. L'anecdote la plus connue le concernant est celle où il aurait peint des raisins si réalistes que les oiseaux seraient venus les picorer.",
+                "talent-kant": "Chez Kant (dans la Critique de la faculté de juger), le talent est la capacité à produire ce pour quoi on peut donner des règles déterminées ; il s'agit d'apprendre et d'appliquer des règles. Il s'oppose au génie.",
+                "genie-kant": "Chez Kant, le génie est une disposition innée de l'esprit (ingenium) par laquelle la nature donne ses règles à l'art. Le génie est original, exemplaire (ses œuvres servent de modèle) et ne peut expliquer scientifiquement comment il produit ses œuvres.",
+                "inspiration-art": "Idée selon laquelle la création artistique proviendrait d'une influence extérieure (divine, muse) ou d'une illumination soudaine et inexplicable, plutôt que d'un travail conscient et méthodique.",
+                "aura-benjamin": "Concept développé par Walter Benjamin dans 'L'œuvre d'art à l'époque de sa reproductibilité technique'. L'aura est liée à l'unicité de l'œuvre d'art originale, à son 'ici et maintenant', à son authenticité et à sa tradition. Elle se perdrait avec la reproduction technique.",
+                "art-pour-art": "Slogan et doctrine esthétique apparue au XIXe siècle (notamment avec Théophile Gautier) affirmant l'autonomie de l'art par rapport à toute finalité morale, sociale, politique ou utilitaire. L'art ne doit viser que la beauté.",
+                "capital-symbolique": "Concept de Pierre Bourdieu désignant l'ensemble des ressources (prestige, reconnaissance, réputation, etc.) liées à la possession de biens symboliques et à la reconnaissance sociale. L'art et la culture sont des lieux importants de constitution du capital symbolique.",
+                "monde-art": "Concept développé par Arthur Danto. Désigne l'ensemble des théories, des discours, des institutions et des pratiques qui entourent les œuvres d'art et qui permettent de les identifier et de les interpréter comme telles. Un objet devient une œuvre d'art lorsqu'il est inséré dans le contexte du 'monde de l'art'."
+            }
+        };
+
+        const chapterNavElement = document.getElementById('chapter-nav').querySelector('ul');
+        const chapterTitleElement = document.getElementById('chapter-title');
+        const chapterContentElement = document.getElementById('chapter-content');
+        const prevPageButton = document.getElementById('prev-page-button');
+        const nextPageButton = document.getElementById('next-page-button');
+        const pageCounterElement = document.getElementById('page-counter');
+        const definitionPopupElement = document.getElementById('definition-popup');
+        const definitionTitleElement = document.getElementById('definition-title');
+        const definitionContentElement = document.getElementById('definition-content');
+
+        let currentChapterId = null;
+        let currentSectionIndex = 0;
+
+        courseData.chapters.forEach(chapter => {
+            const listItem = document.createElement('li');
+            const link = document.createElement('a');
+            link.href = "#";
+            link.textContent = chapter.title;
+            link.classList.add('block', 'p-2', 'rounded-md', 'text-xs', 'font-light', 'text-gray-300', 'hover:bg-gray-700', 'hover:text-white', 'transition-colors');
+            link.dataset.chapterId = chapter.id;
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                loadChapter(chapter.id);
+                document.querySelectorAll('#chapter-nav a').forEach(l => l.classList.remove('bg-gray-600', 'text-white'));
+                link.classList.add('bg-gray-600', 'text-white');
+            });
+            listItem.appendChild(link);
+            chapterNavElement.appendChild(listItem);
+        });
+
+        function loadChapter(chapterId) {
+            const chapter = courseData.chapters.find(ch => ch.id === chapterId);
+            if (!chapter) return;
+
+            currentChapterId = chapterId;
+            currentSectionIndex = 0;
+            chapterTitleElement.textContent = chapter.title;
+            loadSection();
+        }
+
+        function loadSection() {
+            const chapter = courseData.chapters.find(ch => ch.id === currentChapterId);
+            if (!chapter || !chapter.sections[currentSectionIndex]) return;
+
+            const section = chapter.sections[currentSectionIndex];
+            let compactContent = section.content.replace(/class="mt-3"/g, 'class="mt-1.5"').replace(/class="mt-4"/g, 'class="mt-1.5"').replace(/class="mt-2"/g, 'class="mt-1.5"');
+            
+            chapterContentElement.innerHTML = `<div>${section.title ? `<h3 class="text-xs font-semibold text-white mb-1.5">${section.title}</h3>` : ''}${compactContent}</div>`;
+            chapterContentElement.scrollTop = 0; 
+
+            updatePageCounter(chapter.sections.length);
+            updateNavigationButtons(chapter.sections.length);
+            addTermEventListeners();
+        }
+
+        function updatePageCounter(totalSections) {
+            pageCounterElement.textContent = `Partie ${currentSectionIndex + 1}/${totalSections}`;
+        }
+
+        function updateNavigationButtons(totalSections) {
+            prevPageButton.disabled = currentSectionIndex === 0;
+            prevPageButton.classList.toggle('opacity-50', prevPageButton.disabled);
+            prevPageButton.classList.toggle('cursor-not-allowed', prevPageButton.disabled);
+
+            nextPageButton.disabled = currentSectionIndex === totalSections - 1;
+            nextPageButton.classList.toggle('opacity-50', nextPageButton.disabled);
+            nextPageButton.classList.toggle('cursor-not-allowed', nextPageButton.disabled);
+        }
+
+        prevPageButton.addEventListener('click', () => {
+            if (currentSectionIndex > 0) {
+                currentSectionIndex--;
+                loadSection();
+            }
+        });
+
+        nextPageButton.addEventListener('click', () => {
+            const chapter = courseData.chapters.find(ch => ch.id === currentChapterId);
+            if (chapter && currentSectionIndex < chapter.sections.length - 1) {
+                currentSectionIndex++;
+                loadSection();
+            }
+        });
+        
+        function addTermEventListeners() {
+            document.querySelectorAll('.highlighted-term').forEach(termElement => {
+                termElement.addEventListener('mouseenter', showDefinition);
+                termElement.addEventListener('click', showDefinition); 
+                termElement.addEventListener('mouseleave', hideDefinitionOnMouseLeave); 
+            });
+        }
+        
+        let definitionTimeout;
+
+        function showDefinition(event) {
+            clearTimeout(definitionTimeout); 
+            const termKey = event.target.dataset.term;
+            const definition = courseData.definitions[termKey];
+
+            if (definition) {
+                definitionTitleElement.textContent = event.target.textContent;
+                definitionContentElement.innerHTML = `<p>${definition.replace(/\n/g, '</p><p>')}</p>`; 
+                definitionPopupElement.classList.remove('hidden');
+                definitionPopupElement.classList.add('flex'); 
+            }
+        }
+        
+        function hideDefinitionOnMouseLeave() {
+            definitionTimeout = setTimeout(() => {
+                 if (!definitionPopupElement.matches(':hover')) { 
+                    definitionPopupElement.classList.add('hidden');
+                    definitionPopupElement.classList.remove('flex');
+                }
+            }, 300);
+        }
+        
+        document.addEventListener('click', (event) => {
+            if (!definitionPopupElement.contains(event.target) && !event.target.classList.contains('highlighted-term')) {
+                definitionPopupElement.classList.add('hidden');
+                definitionPopupElement.classList.remove('flex');
+            }
+        });
+        
+        definitionPopupElement.addEventListener('click', (event) => {
+            event.stopPropagation();
+        });
+
+        if (courseData.chapters.length > 0) {
+            loadChapter(courseData.chapters[0].id); 
+            const firstChapterLink = chapterNavElement.querySelector(`a[data-chapter-id="${courseData.chapters[0].id}"]`); 
+            if (firstChapterLink) {
+                firstChapterLink.classList.add('bg-gray-600', 'text-white');
+            }
+        }
+    </script>
+</body>
+</html>
